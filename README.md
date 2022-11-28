@@ -15,7 +15,7 @@ $ docker run --name cppdev -v "$PWD":/home -it alpine-dev
 
 ```
 $ cp -a ~iot/userdata/ble-home-central/ble-bme280-central.service /etc/systemd/system/
-& systemctl enable ble-bme280-central
+$ systemctl enable ble-bme280-central
 ```
 
 ## Check the logs
