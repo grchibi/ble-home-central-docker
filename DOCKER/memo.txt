@@ -1,0 +1,16 @@
+1. Compile blescan
+
+  $ docker build -t alpine-dev -f DOCKER/Dockerfile.CPL .
+
+  $ docker run --name cppdev -v "$PWD":/home -it alpine-dev
+  / $ cd home; make build
+
+2. Run blescan
+
+  $ docker build -t ble-home-central-docker-1 -f DOCKER/Dockerfile.1 .
+  $ docker run -v /opt/bluetooth:/var/lib/bluetooth -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /tmp/$(mktemp -d):/run --net=host --name central-1 ble-home-central-docker-1
+  $ docker logs central-1 -f
+
+  $ docker build -t ble-home-central-docker-2 -f DOCKER/Dockerfile.2 .
+  $ docker run -v /opt/bluetooth:/var/lib/bluetooth -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /tmp/$(mktemp -d):/run --net=host --name central-2 ble-home-central-docker-2
+  $ docker logs central-2 -f

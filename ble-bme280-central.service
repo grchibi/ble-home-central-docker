@@ -1,0 +1,13 @@
+[Unit]
+Description = Central for BME280 BLE Peripherals
+Requires = docker.service
+
+[Service]
+Environment=COMPOSE_FILE=/home/iot/userdata/ble-home-central-docker/docker-compose.yaml
+ExecStart = /usr/bin/sudo /usr/bin/docker-compose -f ${COMPOSE_FILE} up
+ExecStop = /usr/bin/sudo /usr/bin/docker-compose -f ${COMPOSE_FILE} down
+Restart=always
+Type = simple
+
+[Install]
+WantedBy = multi-user.target
