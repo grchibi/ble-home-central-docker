@@ -2,18 +2,18 @@ version: '3'
 
 services:
 
-    central-1:
-        build:
-            context: .
-            dockerfile: ./DOCKER/Dockerfile.1
-        image: ble-home-central-docker-1
-#        restart: always
-        volumes:
-            - /opt/bluetooth:/var/lib/bluetooth
-            - /sys/fs/cgroup:/sys/fs/cgroup:ro
-#            - /tmp/$(mktemp -d):/run
-        network_mode: "host"
-        tmpfs: /run
+#    central-1:
+#        build:
+#            context: .
+#            dockerfile: ./DOCKER/Dockerfile.1
+#        image: ble-home-central-docker-1
+##        restart: always
+#        volumes:
+#            - /opt/bluetooth:/var/lib/bluetooth
+#            - /sys/fs/cgroup:/sys/fs/cgroup:ro
+##            - /tmp/$(mktemp -d):/run
+#        network_mode: "host"
+#        tmpfs: /run
 
     central-2:
         build:
