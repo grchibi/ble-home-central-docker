@@ -9,6 +9,7 @@ Then, edit DOCKER/Dockerfile.CPL and DOCKER/Dockerfile to specify the base image
 - FROM arm32v6/alpine       => for Raspberry Pi Zero
 - FROM arm32v7/alpine:3.12  => for Raspberry Pi 3, 4
 
+Finish editing the Dockerfile, execute the following command.
 ```
 $ docker build -t alpine-dev -f DOCKER/Dockerfile.CPL .
 
