@@ -60,8 +60,8 @@ scheduler::~scheduler() {
 	close(_pipe_data_from_central[1]);
 }
 
-void scheduler::chg_apicomm_settings(svr_config_t& s_conf, api_info_t& info) {
-	_worker_ac->chg_apicomm_settings(s_conf.features_api, info);
+void scheduler::chg_apicomm_settings(svr_config_t& s_conf, apis_map_t& apis) {
+	_worker_ac->chg_apicomm_settings(s_conf.features_api, apis);
 }
 
 int scheduler::get_sec_for_alarm_00() {
@@ -293,8 +293,8 @@ apicomm_worker::apicomm_worker(int fd_sighup, int fd_read) : _fd_sig(fd_sighup),
 	_apicomm = make_unique<api_comm>(_fd_sig, _fd_r);
 }
 
-void apicomm_worker::chg_apicomm_settings(bool f_call_api, api_info_t& a_info) {
-	_apicomm->chg_settings(f_call_api, a_info);
+void apicomm_worker::chg_apicomm_settings(bool f_call_api, apis_map_t& a_map) {
+	_apicomm->chg_settings(f_call_api, a_map);
 }
 
 void apicomm_worker::operator()(exception_ptr& ep) {
@@ -326,29 +326,58 @@ string get_exedirpath() {
 	return exepath.substr(0, slashPos);
 }
 
-void initialize(svr_config_t& s_config, api_info_t& a_info) {
+void initialize(svr_config_t& s_config, apis_map_t& a_map) {
 	// read config file
 	string cfg_path = get_exedirpath();
 	cfg_path += "/config.yaml";
 
 	YAML::Node config = YAML::LoadFile(cfg_path);
 
-	// parse api config
+	/** parse api config **/
+
+	// default api config
+	api_info_t def_api;
 	if (config["api"]) {
 		if (config["api"]["protocol"]) {
-			a_info.protocol = config["api"]["protocol"].as<string>();
+			def_api.protocol = config["api"]["protocol"].as<string>();
 		}
 		if (config["api"]["host"]) {
-			a_info.host = config["api"]["host"].as<string>();
+			def_api.host = config["api"]["host"].as<string>();
 		}
 		if (config["api"]["port"]) {
-			a_info.port = config["api"]["port"].as<string>();
+			def_api.port = config["api"]["port"].as<string>();
 		}
 		if (config["api"]["path"]) {
-			a_info.path = config["api"]["path"].as<string>();
+			def_api.path = config["api"]["path"].as<string>();
 		}
 		if (config["api"]["ctype"]) {
-			a_info.ctype = config["api"]["ctype"].as<string>();
+			def_api.ctype = config["api"]["ctype"].as<string>();
+		}
+	}
+	a_map.insert(make_pair(string("default"), def_api));
+
+	// parse apis config
+	YAML::Node apis_node = config["apis"];
+	if (apis_node.IsSequence()) {
+		for (const auto api: apis_node) {
+			api_info_t apiinfo;
+			if (api["protocol"]) {
+				apiinfo.protocol = api["protocol"].as<string>();
+			}
+			if (api["host"]) {
+				apiinfo.host = api["host"].as<string>();
+			}
+			if (api["port"]) {
+				apiinfo.port = api["port"].as<string>();
+			}
+			if (api["path"]) {
+				apiinfo.path = api["path"].as<string>();
+			}
+			if (api["ctype"]) {
+				apiinfo.ctype = api["ctype"].as<string>();
+			}
+
+			if (api["key"]) a_map.insert(make_pair(api["key"].as<string>(), apiinfo));
 		}
 	}
 
@@ -385,11 +414,11 @@ int main(int argc, char** argv)
 
 	try {
 		svr_config_t s_config;
-		api_info_t a_info;
+		apis_map_t a_map;
 
-		initialize(s_config, a_info);
+		initialize(s_config, a_map);
 
-		svr_scheduler.chg_apicomm_settings(s_config, a_info);
+		svr_scheduler.chg_apicomm_settings(s_config, a_map);
 		svr_scheduler.chg_central_settings(s_config);
 
 		svr_scheduler.run();

@@ -9,6 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "nlohmann/json.hpp"
+
 #include "api_comm.h"
 
 #include "tt_lib.h"
@@ -28,6 +30,9 @@ api_comm::api_comm(int fd_sighup, int fd_read) {
 	_fds_poll[0].events = POLLIN;
 	_fds_poll[1].fd = fd_read;
 	_fds_poll[1].events = POLLIN;
+
+	api_info_t def_api;
+	_apis_map.insert(make_pair(string("default"), def_api));
 }
 
 api_comm::~api_comm() {
@@ -37,32 +42,48 @@ api_comm::~api_comm() {
 	}
 }
 
-void api_comm::chg_settings(bool f_call_api, api_info_t& info) {
+void api_comm::chg_settings(bool f_call_api, apis_map_t& a_map) {
 	_features_call_api = f_call_api;	// call api ?
-
-	_protocol = info.protocol;
-	_host = info.host;
-	_port = info.port;
-	_path = info.path;
-	_ctype = info.ctype;
+	_apis_map = a_map;	// api config
 }
 
 void api_comm::send_data(const char* json) {
 	if (!_curl_handle) {
 		tt_logger::instance().puts("API_COMM[WARN] at send_data(): curl handle is null.");
+		tt_logger::instance().printf("API_COMM[WARN]: Received => %s\n", json);
 		return;
 	} else if (!_features_call_api)	{
 		tt_logger::instance().puts("API_COMM[WARN] at send_data(): the feature of calling api is unavailable.");
+		tt_logger::instance().printf("API_COMM[WARN]: Received => %s\n", json);
 		return;
 	}
 
-	string url = _protocol + "://" + _host + ":" + _port + _path;
+	// obtain the right destination
+	string device_id;
+	api_info_t destination_info;
+	nlohmann::json json_obj;
+	try {
+		json_obj = nlohmann::json::parse(json);
+		device_id = (json_obj["tph_register"]["dsrc"]).get<std::string>();
+		if (_apis_map.find(device_id) == _apis_map.end()) {	// not found
+			device_id = "default";
+		}
+	} catch (exception& ex) {
+		tt_logger::instance().printf("API_COMM[ERROR]: at send_data() => %s\n", ex.what());
+		tt_logger::instance().printf("API_COMM[ERROR]: Received and parse => %s\n", json);
+		tt_logger::instance().puts("API_COMM[WARN] at send_data(): default API setting is used.");
+		device_id = "default";
+	}
+	destination_info = _apis_map[device_id];
+	string url = destination_info.protocol + "://" + destination_info.host + ":" + destination_info.port + destination_info.path;
+	tt_logger::instance().printf("API_COMM[INFO]: Destination URL(%s) => %s\n", device_id.c_str(), url.c_str());
 
 	curl_easy_setopt(_curl_handle, CURLOPT_URL, url.c_str());
 	curl_easy_setopt(_curl_handle, CURLOPT_HTTPHEADER, _headers);
 	curl_easy_setopt(_curl_handle, CURLOPT_POST, 1);
 	curl_easy_setopt(_curl_handle, CURLOPT_POSTFIELDS, json);
 	curl_easy_setopt(_curl_handle, CURLOPT_POSTFIELDSIZE, strlen(json));
+	curl_easy_setopt(_curl_handle, CURLOPT_CONNECTTIMEOUT, 5);
 
 	int cnt = 0;
 	while (cnt < RETRY_MAX_COUNT) {

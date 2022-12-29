@@ -44,7 +44,7 @@ public:
 	apicomm_worker(int fd_sighup, int fd_read);
 	~apicomm_worker() {}
 
-	void chg_apicomm_settings(bool f_call_api, api_info_t& a_info);
+	void chg_apicomm_settings(bool f_call_api, apis_map_t& a_info);
 	//void operator()(struct pollfd (&fds)[1], std::exception_ptr& ep);
 	void operator()(std::exception_ptr& ep);
 
@@ -98,7 +98,7 @@ public:
 	scheduler(void);
 	~scheduler();
 
-	void chg_apicomm_settings(svr_config_t& s_conf, api_info_t& info);
+	void chg_apicomm_settings(svr_config_t& s_conf, apis_map_t& apis);
 	void chg_central_settings(svr_config_t& s_conf);
 	void run(void);
 	void sigint(void);

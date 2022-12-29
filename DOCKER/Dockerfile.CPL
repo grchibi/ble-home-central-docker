@@ -1,4 +1,5 @@
-FROM arm32v6/alpine
+#FROM arm32v6/alpine
+FROM arm32v7/alpine:3.12
 
 RUN apk add --no-cache gcc libc-dev make g++ bluez-dev yaml-cpp-dev curl-dev musl-dev \
 && ln -s /usr/lib/libcurl.so.4 /usr/lib/libcurl-gnutls.so.4 \

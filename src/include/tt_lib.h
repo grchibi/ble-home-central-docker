@@ -48,12 +48,20 @@ public:
 
 	template <typename ... Args>
 	void printf(const char* const fmt, Args const & ... args) noexcept {
+	#ifdef JOURNAL
+		::fprintf(stderr, fmt, args ...);
+	#else
 		::printf(fmt, args ...);
+	#endif
 	}
 
 	void puts(const char* const msg) {
 		std::lock_guard<std::mutex> lock(_mutex);
+	#ifdef JOURNAL
+		std::cerr << msg << std::endl;
+	#else
 		std::cout << msg << std::endl;
+	#endif
 	}
 
 };

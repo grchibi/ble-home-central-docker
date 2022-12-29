@@ -5,6 +5,21 @@ api:
   path: /api/v1/register
   ctype: application/json
 
+apis:
+  - key: BME280_BEACON_1
+    protocol: http
+    host: 172.0.0.2
+    port: 80
+    path: /api/v1/register
+    ctype: application/json
+
+  - key: BME280_BEACON_2
+    protocol: http
+    host: 127.0.0.1
+    port: 8080
+    path: /api/v1/register
+    ctype: application/json
+    
 features:
   api: no
 

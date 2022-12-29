@@ -27,7 +27,12 @@ LDFLAGS = -L/usr/lib/arm-linux-gnueabihf -L../yaml-cpp
 
 OUTPUT_DIR = $(REL_DIR)
 OUTPUT = $(REL_DIR)/$(TARGET_EXEC)
-CPPFLAGS += -Wall -W -DDEBUG_BUILD -g
+
+### for debug output
+#CPPFLAGS += -Wall -W -DDEBUG_BUILD -g
+
+### for system-journald
+CPPFLAGS += -Wall -W -Wno-psabi -DJOURNAL -g
 
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp

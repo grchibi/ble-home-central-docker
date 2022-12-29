@@ -1,9 +1,14 @@
 # ble-home-central-docker
 
-## Compile blescan
+## Build blescan
 
-Before the compilation, create `config.yaml.1` and `config.yaml.2` from config.yaml.
-In the build process these config files are needed and copied to docker images.
+Before building the software, edit config.yaml.
+In the build process the config file is needed and copied to docker image.
+
+Then, edit DOCKER/Dockerfile.CPL and DOCKER/Dockerfile to specify the base image.
+- FROM arm32v6/alpine       => for Raspberry Pi Zero
+- FROM arm32v7/alpine:3.12  => for Raspberry Pi 3, 4
+
 ```
 $ docker build -t alpine-dev -f DOCKER/Dockerfile.CPL .
 
@@ -20,6 +25,5 @@ $ systemctl enable ble-bme280-central
 
 ## Check the logs
 ```
-$ docker logs ble-home-central-docker_central-1_1 -f
-$ docker logs ble-home-central-docker_central-2_1 -f
+$ docker logs ble-home-central-docker_central_1 -f
 ```
