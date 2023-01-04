@@ -28,3 +28,7 @@ $ systemctl enable ble-bme280-central
 ```
 $ docker logs ble-home-central-docker_central_1 -f
 ```
+You can view the journal logs, too.
+```
+$ journalctl -f -u ble-bme280-central.service
+```
