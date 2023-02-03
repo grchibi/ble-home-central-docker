@@ -32,7 +32,7 @@ api_comm::api_comm(int fd_sighup, int fd_read) {
 	_fds_poll[1].events = POLLIN;
 
 	api_info_t def_api;
-	_apis_map.insert(make_pair(string("default"), def_api));
+	_apis_map.insert(make_pair(string("default"), vector<api_info_t>{def_api}));
 }
 
 api_comm::~api_comm() {
@@ -60,7 +60,6 @@ void api_comm::send_data(const char* json) {
 
 	// obtain the right destination
 	string device_id;
-	api_info_t destination_info;
 	nlohmann::json json_obj;
 	try {
 		json_obj = nlohmann::json::parse(json);
@@ -74,37 +73,40 @@ void api_comm::send_data(const char* json) {
 		tt_logger::instance().puts("API_COMM[WARN] at send_data(): default API setting is used.");
 		device_id = "default";
 	}
-	destination_info = _apis_map[device_id];
-	string url = destination_info.protocol + "://" + destination_info.host + ":" + destination_info.port + destination_info.path;
-	tt_logger::instance().printf("API_COMM[INFO]: Destination URL(%s) => %s\n", device_id.c_str(), url.c_str());
+	std::vector<api_info_t> &destination_infos_v = _apis_map[device_id];
 
-	curl_easy_setopt(_curl_handle, CURLOPT_URL, url.c_str());
-	curl_easy_setopt(_curl_handle, CURLOPT_HTTPHEADER, _headers);
-	curl_easy_setopt(_curl_handle, CURLOPT_POST, 1);
-	curl_easy_setopt(_curl_handle, CURLOPT_POSTFIELDS, json);
-	curl_easy_setopt(_curl_handle, CURLOPT_POSTFIELDSIZE, strlen(json));
-	curl_easy_setopt(_curl_handle, CURLOPT_CONNECTTIMEOUT, 5);
+	for (const auto destination_info: destination_infos_v) {
+		string url = destination_info.protocol + "://" + destination_info.host + ":" + destination_info.port + destination_info.path;
+		tt_logger::instance().printf("API_COMM[INFO]: Destination URL(%s) => %s\n", device_id.c_str(), url.c_str());
 
-	int cnt = 0;
-	while (cnt < RETRY_MAX_COUNT) {
-		CURLcode ret = curl_easy_perform(_curl_handle);
+		curl_easy_setopt(_curl_handle, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(_curl_handle, CURLOPT_HTTPHEADER, _headers);
+		curl_easy_setopt(_curl_handle, CURLOPT_POST, 1);
+		curl_easy_setopt(_curl_handle, CURLOPT_POSTFIELDS, json);
+		curl_easy_setopt(_curl_handle, CURLOPT_POSTFIELDSIZE, strlen(json));
+		curl_easy_setopt(_curl_handle, CURLOPT_CONNECTTIMEOUT, 5);
 
-		if (ret == CURLE_OK) {
-			long resp_code = -1;
-			ret = curl_easy_getinfo(_curl_handle, CURLINFO_RESPONSE_CODE, &resp_code);
-			if (ret == CURLE_OK && resp_code == 200) {
-				tt_logger::instance().puts("API_COMM[INFO] at send_data(): 200 OK.");
-				break;
+		int cnt = 0;
+		while (cnt < RETRY_MAX_COUNT) {
+			CURLcode ret = curl_easy_perform(_curl_handle);
+
+			if (ret == CURLE_OK) {
+				long resp_code = -1;
+				ret = curl_easy_getinfo(_curl_handle, CURLINFO_RESPONSE_CODE, &resp_code);
+				if (ret == CURLE_OK && resp_code == 200) {
+					tt_logger::instance().puts("API_COMM[INFO] at send_data(): 200 OK.");
+					break;
+				} else {
+					tt_logger::instance().printf("API_COMM[ERROR] at send_data(): http response code %ld was returned. retrying...", resp_code);
+				}
+
 			} else {
-				tt_logger::instance().printf("API_COMM[ERROR] at send_data(): http response code %ld was returned. retrying...", resp_code);
+				tt_logger::instance().printf("API_COMM[ERROR] at send_data(): %s\n", curl_easy_strerror(ret));
 			}
 
-		} else {
-			tt_logger::instance().printf("API_COMM[ERROR] at send_data(): %s\n", curl_easy_strerror(ret));
+			sleep(RETRY_SLEEP_SECS);
+			cnt++;
 		}
-
-		sleep(RETRY_SLEEP_SECS);
-		cnt++;
 	}
 }
 

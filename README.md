@@ -30,5 +30,5 @@ $ docker logs ble-home-central-docker_central_1 -f
 ```
 You can view the journal logs, too.
 ```
-$ journalctl -f -u ble-bme280-central.service
+$ journalctl -u ble-bme280-central.service --no-pager --since="2023-01-27 18:00:00"
 ```

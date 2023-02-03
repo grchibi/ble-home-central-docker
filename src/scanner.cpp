@@ -354,30 +354,56 @@ void initialize(svr_config_t& s_config, apis_map_t& a_map) {
 			def_api.ctype = config["api"]["ctype"].as<string>();
 		}
 	}
-	a_map.insert(make_pair(string("default"), def_api));
+	a_map.insert(make_pair(string("default"), vector<api_info_t>{def_api}));
 
 	// parse apis config
 	YAML::Node apis_node = config["apis"];
 	if (apis_node.IsSequence()) {
 		for (const auto api: apis_node) {
-			api_info_t apiinfo;
-			if (api["protocol"]) {
-				apiinfo.protocol = api["protocol"].as<string>();
-			}
-			if (api["host"]) {
-				apiinfo.host = api["host"].as<string>();
-			}
-			if (api["port"]) {
-				apiinfo.port = api["port"].as<string>();
-			}
-			if (api["path"]) {
-				apiinfo.path = api["path"].as<string>();
-			}
-			if (api["ctype"]) {
-				apiinfo.ctype = api["ctype"].as<string>();
-			}
+			if (api["dests"]) {	// multiple destination
+				YAML::Node dests_node = api["dests"];
+				if (dests_node.IsSequence()) {
+					for (const auto dest: dests_node) {
+						api_info_t apiinfo;
+						if (dest["protocol"]) {
+							apiinfo.protocol = dest["protocol"].as<string>();
+						}
+						if (dest["host"]) {
+							apiinfo.host = dest["host"].as<string>();
+						}
+						if (dest["port"]) {
+							apiinfo.port = dest["port"].as<string>();
+						}
+						if (dest["path"]) {
+							apiinfo.path = dest["path"].as<string>();
+						}
+						if (dest["ctype"]) {
+							apiinfo.ctype = dest["ctype"].as<string>();
+						}
 
-			if (api["key"]) a_map.insert(make_pair(api["key"].as<string>(), apiinfo));
+						a_map[api["key"].as<string>()].push_back(apiinfo);
+					}
+				}
+			} else {	// single destination
+				api_info_t apiinfo;
+				if (api["protocol"]) {
+					apiinfo.protocol = api["protocol"].as<string>();
+				}
+				if (api["host"]) {
+					apiinfo.host = api["host"].as<string>();
+				}
+				if (api["port"]) {
+					apiinfo.port = api["port"].as<string>();
+				}
+				if (api["path"]) {
+					apiinfo.path = api["path"].as<string>();
+				}
+				if (api["ctype"]) {
+					apiinfo.ctype = api["ctype"].as<string>();
+				}
+
+				if (api["key"]) a_map.insert(make_pair(api["key"].as<string>(), vector<api_info_t>{apiinfo}));
+			}
 		}
 	}
 

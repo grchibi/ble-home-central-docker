@@ -10,6 +10,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <curl/curl.h>
 #include <poll.h>
@@ -28,7 +29,7 @@ typedef struct api_info {
     std::string ctype;
 } api_info_t;
 
-typedef std::map<std::string, api_info_t> apis_map_t;
+typedef std::map<std::string, std::vector<api_info_t>> apis_map_t;
 
 
 /**
