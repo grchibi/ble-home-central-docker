@@ -1,3 +1,8 @@
+base:
+  api-thread-pool-size: 3
+  api-retry-max-count: 2
+  api-retry-duration-secs: 10
+
 api:
   protocol: http
   host: 127.0.0.1

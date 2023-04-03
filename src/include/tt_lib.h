@@ -48,6 +48,7 @@ public:
 
 	template <typename ... Args>
 	void printf(const char* const fmt, Args const & ... args) noexcept {
+		std::lock_guard<std::mutex> lock(_mutex);
 	#ifdef JOURNAL
 		::fprintf(stderr, fmt, args ...);
 	#else
