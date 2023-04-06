@@ -6,7 +6,7 @@ services:
         build:
             context: .
             dockerfile: ./DOCKER/Dockerfile
-        image: grchibi/ble-home-central-docker:1.00
+        image: grchibi/ble-home-central-docker:1.50
 #        restart: always
         volumes:
             - /opt/bluetooth:/var/lib/bluetooth
